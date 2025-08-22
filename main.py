@@ -1,5 +1,8 @@
+from utils import setup_logging
+
+
 def main():
-    print("Hello from pyagent!")
+    setup_logging()
 
 
 if __name__ == "__main__":

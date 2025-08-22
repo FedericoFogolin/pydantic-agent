@@ -5,7 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "crawl4ai>=0.7.4",
+    "logfire>=4.3.4",
     "pydantic>=2.11.7",
     "pydantic-ai>=0.7.4",
+    "streamlit>=1.48.1",
     "supabase>=2.18.1",
 ]
