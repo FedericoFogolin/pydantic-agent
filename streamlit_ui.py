@@ -10,8 +10,8 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from supabase import Client
 
-from graph import run_graph
-from utils import setup_logging
+from .pyagent.graph import run_graph
+
 
 load_dotenv()
 
@@ -22,7 +22,6 @@ supabase: Client = Client(
 logfire.configure(scrubbing=False)
 logfire.instrument_pydantic_ai()
 
-setup_logging()
 
 @st.cache_resource
 def get_thread_id():
