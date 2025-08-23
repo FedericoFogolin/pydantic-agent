@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import os
+import uuid
 
-from dotenv import load_dotenv
 import logfire
 import streamlit as st
-import streamlit.components.v1 as components
-from utils import setup_logging
+from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from supabase import Client
 
 from graph import run_graph
+from utils import setup_logging
 
 load_dotenv()
 
@@ -24,6 +24,11 @@ logfire.instrument_pydantic_ai()
 
 setup_logging()
 
+@st.cache_resource
+def get_thread_id():
+    return str(uuid.uuid4())
+
+thread_id = get_thread_id()
 
 async def main():
     st.title("Archon - Agent Builder")
@@ -57,7 +62,7 @@ async def main():
             st.markdown(user_input)
 
         # Run the graph and display the result
-        result = await run_graph("run_002", user_input)
+        result = await run_graph(thread_id, user_input)
         st.session_state.messages.append({"type": "ai", "content": result})
         with st.chat_message("assistant"):
             st.markdown(result)
