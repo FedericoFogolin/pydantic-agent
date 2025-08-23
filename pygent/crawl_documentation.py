@@ -15,9 +15,7 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from supabase import Client, create_client
 
-from utils import setup_logging
 
-setup_logging()
 load_dotenv()
 
 url: str = os.getenv("SUPABASE_URL", "")
@@ -66,6 +64,7 @@ def chunk_text(text: str, chunk_size: int = 5000) -> list[str]:
             # Find the last paragraph break
             last_break = chunk.rfind("\n\n")
             if (
+
                 last_break > chunk_size * 0.3
             ):  # Only break if we're past 30% of chunk_size
                 end = start + last_break

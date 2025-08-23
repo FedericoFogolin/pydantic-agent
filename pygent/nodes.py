@@ -5,18 +5,17 @@ from dataclasses import dataclass
 from typing import Annotated, Optional
 
 import logfire
+from .agents import end_conversation_agent, reasoner_agent, router_agent
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
-from pydantic_graph import BaseNode, End, Graph, GraphRunContext
-from supabase import Client
-
-from agents import end_conversation_agent, reasoner_agent, router_agent
-from py_ai_expert import (
+from .py_ai_expert import (
     PydanticAIDeps,
     list_documentation_pages_helper,
     pydantic_ai_expert,
 )
+from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
+from pydantic_graph import BaseNode, End, Graph, GraphRunContext
+from supabase import Client
 
 load_dotenv()
 

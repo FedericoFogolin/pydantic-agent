@@ -1,10 +1,9 @@
 from pathlib import Path
 
 import logfire
+from .nodes import DefineScopeNode, GetUserMessageNode, GraphState, graph
 from pydantic_graph import End
 from pydantic_graph.persistence.file import FileStatePersistence
-
-from nodes import CoderNode, DefineScopeNode, GetUserMessageNode, GraphState, graph
 
 logfire.configure(scrubbing=False)
 logfire.instrument_pydantic_ai()

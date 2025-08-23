@@ -1,11 +1,10 @@
 import logging
-import os
 from dataclasses import dataclass
 from typing import Optional
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from pydantic_ai import Agent, ModelRetry, RunContext
+from pydantic_ai import Agent, RunContext
 from supabase import Client
 
 load_dotenv()
