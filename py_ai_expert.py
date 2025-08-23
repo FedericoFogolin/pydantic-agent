@@ -1,23 +1,22 @@
 import logging
 import os
 from dataclasses import dataclass
+from typing import Optional
 
-import logfire
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic_ai import Agent, ModelRetry, RunContext
 from supabase import Client
 
 load_dotenv()
-llm = os.getenv("LLM_MODEL")
-
-logfire.instrument_pydantic_ai()
+llm = "openai:gpt-4o"
 
 
 @dataclass
 class PydanticAIDeps:
     supabase: Client
     openai_client: AsyncOpenAI
+    reasoner_output: Optional[str] = None
 
 
 system_prompt = """
@@ -55,11 +54,21 @@ Then also always check the list of available documentation pages and retrieve th
 - Helpful tip: when starting a new AI agent build, it's a good idea to look at the 'weather agent' in the docs as an example.
 - When starting a new AI agent build, always produce the full code for the AI agent - never tell the user to finish a tool/function.
 - When refining an existing AI agent build in a conversation, just share the code changes necessary.
+- Each time you respond to the user, ask them to let you know either if they need changes or the code looks good.
 """
 
 pydantic_ai_expert = Agent(
     llm, system_prompt=system_prompt, deps_type=PydanticAIDeps, retries=2
 )
+
+
+@pydantic_ai_expert.system_prompt
+def add_reasoner_output(ctx: RunContext[PydanticAIDeps]) -> str:
+    return f"""
+    \n\nAdditional thoughts/instructions from the reasoner LLM.
+    This scope includes documentation pages for you to search as well:
+    {ctx.deps.reasoner_output}
+    """
 
 
 async def get_embedding(text: str, openai_client: AsyncOpenAI) -> list[float]:
@@ -115,17 +124,10 @@ async def retrieve_relevant_documentation(
         return "Error: Could not retrieve relevant documentation."
 
 
-@pydantic_ai_expert.tool
-async def list_documentation_pages(ctx: RunContext[PydanticAIDeps]) -> list[str]:
-    """
-    Retrieve a list of all available Pydantic AI documentation pages.
-
-    Returns:
-        List[str]: List of unique URLs for all documentation pages
-    """
+async def list_documentation_pages_helper(supabase: Client) -> list[str]:
     try:
         result = (
-            ctx.deps.supabase.from_("site_pages")
+            supabase.from_("site_pages")
             .select("url")
             .eq("metadata->>source", "pydantic_ai_docs")
             .execute()
@@ -140,6 +142,17 @@ async def list_documentation_pages(ctx: RunContext[PydanticAIDeps]) -> list[str]
     except Exception as e:
         logging.error(f"Error retrieving documentation pages: {e}")
         return []
+
+
+@pydantic_ai_expert.tool
+async def list_documentation_pages(ctx: RunContext[PydanticAIDeps]) -> list[str]:
+    """
+    Retrieve a list of all available Pydantic AI documentation pages.
+
+    Returns:
+        List[str]: List of unique URLs for all documentation pages
+    """
+    return await list_documentation_pages_helper(ctx.deps.supabase)
 
 
 @pydantic_ai_expert.tool

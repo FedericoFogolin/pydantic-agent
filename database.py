@@ -103,7 +103,9 @@ async def get_title_and_summary(chunk: str, url: str) -> Dict[str, str]:
         )
 
     agent = Agent(
-        os.getenv("LLM_MODEL"), output_type=TitleAndSummary, system_prompt=system_prompt
+        os.getenv("PRIMARY_MODEL"),
+        output_type=TitleAndSummary,
+        system_prompt=system_prompt,
     )
 
     try:
