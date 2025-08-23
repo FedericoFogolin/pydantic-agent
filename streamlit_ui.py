@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 import logfire
 import streamlit as st
 import streamlit.components.v1 as components
-from nodes import DefineScopeNode, GetUserMessageNode, CoderNode, GraphState, graph
 from utils import setup_logging
 from openai import AsyncOpenAI
 from supabase import Client
