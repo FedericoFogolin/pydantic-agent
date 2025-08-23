@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from supabase import Client
 
-from .pyagent.graph import run_graph
+from pygent.graph import run_graph
 
 
 load_dotenv()
