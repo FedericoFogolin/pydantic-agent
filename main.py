@@ -3,9 +3,8 @@ import asyncio
 import typer
 from dotenv import load_dotenv
 import logfire
-from pydantic_graph import End
 
-from nodes import DefineScopeNode, GetUserMessageNode, CoderNode, GraphState, graph
+from nodes import DefineScopeNode, GetUserMessageNode, GraphState, graph
 from utils import setup_logging
 
 load_dotenv()
