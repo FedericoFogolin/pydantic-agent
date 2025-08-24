@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict
 from urllib.parse import urlparse
 from xml.etree import ElementTree
-import html2text
 
+import html2text
 import requests
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
 from dotenv import load_dotenv
@@ -15,7 +15,6 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 from supabase import Client, create_client
-
 
 load_dotenv()
 

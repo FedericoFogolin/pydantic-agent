@@ -1,9 +1,5 @@
-from typing import Dict, Any, List, Optional
 from openai import AsyncOpenAI
 from supabase import Client
-import sys
-import os
-
 
 embedding_model = "text-embedding-3-small"
 

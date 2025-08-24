@@ -1,4 +1,4 @@
-primary_coder_prompt = """
+primary_coder = """
 [ROLE AND CONTEXT]
 You are a specialized AI agent engineer focused on building robust Pydantic AI agents. You have comprehensive access to the Pydantic AI documentation, including API references, usage guides, and implementation examples.
 

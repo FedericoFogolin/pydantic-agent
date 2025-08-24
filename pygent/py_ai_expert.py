@@ -7,7 +7,7 @@ from openai import AsyncOpenAI
 from pydantic_ai import Agent, RunContext
 from supabase import Client
 
-from .prompts.primary_coder import primary_coder_prompt
+from .prompts import docs_expert, primary_coder
 from .utils import (
     get_page_content_helper,
     list_documentation_pages_helper,
@@ -23,15 +23,21 @@ logfire.configure()
 class PydanticAIDeps:
     supabase: Client
     embedding_client: AsyncOpenAI
+    user_intent: Optional[str] = None
     reasoner_output: Optional[str] = None
 
 
-pydantic_ai_coder = Agent(
-    llm, system_prompt=primary_coder_prompt, deps_type=PydanticAIDeps, retries=2
-)
+pydantic_ai_expert = Agent(llm, deps_type=PydanticAIDeps, retries=2)
 
 
-@pydantic_ai_coder.system_prompt
+@pydantic_ai_expert.system_prompt
+def select_base_prompt(ctx: RunContext[PydanticAIDeps]) -> str:
+    coder_prompt = primary_coder
+    expert_prompt = docs_expert
+    return coder_prompt if ctx.deps.user_intent == "Development" else expert_prompt
+
+
+@pydantic_ai_expert.system_prompt
 def add_reasoner_output(ctx: RunContext[PydanticAIDeps]) -> str:
     return f"""
     \n\nAdditional thoughts/instructions from the reasoner LLM.
@@ -40,7 +46,7 @@ def add_reasoner_output(ctx: RunContext[PydanticAIDeps]) -> str:
     """
 
 
-@pydantic_ai_coder.tool
+@pydantic_ai_expert.tool
 async def retrieve_relevant_documentation(
     ctx: RunContext[PydanticAIDeps], user_query: str
 ) -> str:
@@ -58,7 +64,7 @@ async def retrieve_relevant_documentation(
     )
 
 
-@pydantic_ai_coder.tool
+@pydantic_ai_expert.tool
 async def list_documentation_pages(ctx: RunContext[PydanticAIDeps]) -> list[str]:
     """
     Retrieve a list of all available Pydantic AI documentation pages.
@@ -69,7 +75,7 @@ async def list_documentation_pages(ctx: RunContext[PydanticAIDeps]) -> list[str]
     return await list_documentation_pages_helper(ctx.deps.supabase)
 
 
-@pydantic_ai_coder.tool
+@pydantic_ai_expert.tool
 async def get_page_content(ctx: RunContext[PydanticAIDeps], url: str) -> str:
     """
     Retrieve the full content of a specific documentation page by combining all its chunks.

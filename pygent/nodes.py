@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Annotated, Optional
+from typing import Annotated
 
 import logfire
 from dotenv import load_dotenv
@@ -11,11 +11,16 @@ from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 from pydantic_graph import BaseNode, End, Graph, GraphRunContext
 from supabase import Client
 
-from .agents import end_conversation_agent, reasoner_agent, router_agent
+from .agents import (
+    end_conversation_agent,
+    reasoner_agent,
+    router_agent,
+    triage_agent,
+)
 from .py_ai_expert import (
     PydanticAIDeps,
     list_documentation_pages_helper,
-    pydantic_ai_coder,
+    pydantic_ai_expert,
 )
 
 load_dotenv()
@@ -32,13 +37,48 @@ supabase: Client = Client(
 @dataclass
 class GraphState:
     latest_user_message: str
+    latest_model_message: str
     messages: Annotated[list[bytes], lambda x, y: x + y]
-    scope: Optional[str] = None
+
+    user_intent: str
+    scope: str
+
+    refined_prompt: str
+    refined_tool: str
+    refined_agent: str
 
 
 @dataclass
-class DefineScopeNode(BaseNode[GraphState, None]):
-    async def run(self, ctx: GraphRunContext[GraphState]) -> CoderNode:
+class Triage(BaseNode[GraphState, None]):
+    async def run(
+        self, ctx: GraphRunContext[GraphState]
+    ) -> DefineScope | ExpertNode | Triage:
+        message_history: list[ModelMessage] = []
+        for message_row in ctx.state.messages:
+            message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
+
+        result = await triage_agent.run(
+            ctx.state.latest_user_message, message_history=message_history
+        )
+        logfire.info(f"Triage result: {result.output.intent}")
+        ctx.state.messages = [result.new_messages_json()]
+
+        if result.output.intent == "Q&A":
+            ctx.state.user_intent = result.output.intent
+            return ExpertNode()
+        elif result.output.intent == "Development":
+            ctx.state.user_intent = result.output.intent
+            return DefineScope()
+        else:
+            ctx.state.user_intent = result.output.intent
+            assert result.output.response_to_user is not None
+            ctx.state.latest_model_message = result.output.response_to_user
+            return Triage()
+
+
+@dataclass
+class DefineScope(BaseNode[GraphState, None]):
+    async def run(self, ctx: GraphRunContext[GraphState]) -> ExpertNode:
         documentation_pages = await list_documentation_pages_helper(supabase)
         documentation_pages_str = "\n".join(documentation_pages)
         prompt = f"""
@@ -66,11 +106,11 @@ class DefineScopeNode(BaseNode[GraphState, None]):
         with open(scope_path, "w", encoding="utf-8") as f:
             f.write(scope)
 
-        return CoderNode()
+        return ExpertNode()
 
 
 @dataclass
-class CoderNode(BaseNode[GraphState, None]):
+class ExpertNode(BaseNode[GraphState, None]):
     async def run(self, ctx: GraphRunContext[GraphState]) -> GetUserMessageNode:
         deps = PydanticAIDeps(
             supabase=supabase,
@@ -82,7 +122,7 @@ class CoderNode(BaseNode[GraphState, None]):
         for message_row in ctx.state.messages:
             message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
 
-        result = await pydantic_ai_coder.run(
+        result = await pydantic_ai_expert.run(
             ctx.state.latest_user_message,
             deps=deps,
             message_history=message_history,
@@ -98,7 +138,7 @@ class GetUserMessageNode(BaseNode[GraphState, None]):
 
     async def run(
         self, ctx: GraphRunContext[GraphState]
-    ) -> FinishConversationNode | CoderNode:
+    ) -> FinishConversationNode | ExpertNode:
         prompt = f"""
         The user has sent a message: 
         
@@ -116,7 +156,7 @@ class GetUserMessageNode(BaseNode[GraphState, None]):
         if next_node == "finish_conversation":
             return FinishConversationNode()
         else:
-            return CoderNode()
+            return ExpertNode()
 
 
 @dataclass
@@ -136,8 +176,9 @@ class FinishConversationNode(BaseNode[GraphState, None, str]):
 
 graph = Graph(
     nodes=[
-        DefineScopeNode,
-        CoderNode,
+        Triage,
+        DefineScope,
+        ExpertNode,
         GetUserMessageNode,
         FinishConversationNode,
     ],

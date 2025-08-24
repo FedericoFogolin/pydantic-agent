@@ -1,7 +1,9 @@
 import os
+from typing import Literal, Optional
+
 from dotenv import load_dotenv
-from pydantic_ai import Agent
 from pydantic import BaseModel, Field
+from pydantic_ai import Agent
 
 load_dotenv()
 
@@ -25,16 +27,31 @@ end_conversation_agent = Agent(
 )
 
 
-class ConciergeOutput(BaseModel):
-    """The output of the concierge agent."""
+class TriageResult(BaseModel):
+    """
+    Represents the classified intent of a user's request.
+    """
 
-    intent: str = Field(
-        description="The user's intent. Must be one of: 'chat', 'build_agent', 'explain_concept'."
+    intent: Literal["Development", "Q&A", "Chat"] = Field(
+        description="The classified intent. Chat if unclear.",
     )
-    response: str = Field(description="The chat response to the user.")
+    reasoning: str = Field(
+        ..., description="A brief explanation for the classification choice."
+    )
+    response_to_user: Optional[str] = Field(
+        default=None,
+        description="If the intent is unclear, this field contains a cordial response to the user, reminding them that the agent's purpose is to help with PydanticAI development.",
+    )
 
 
-concierge_agent = Agent[None, ConciergeOutput](
+triage_agent = Agent[None, TriageResult](
     primary_llm_model,
-    output_type=ConciergeOutput,
+    output_type=TriageResult,
+    system_prompt="""Your job is to analyze the user's request and classify its intent into one of two categories:
+        1. Development: for request about creating or modifying code, agents or software.
+        2. Q&A: for requests seeking information or explanations or brainstorming.
+        3. Chat: if the request is conversational or unclear.
+
+        If the intent is unclear and the request conversational ('hello', 'how are you?'), generate response_to_user conversationally reminding the user your purpose:
+        help with Pydantic AI development.""",
 )

@@ -27,7 +27,9 @@ logfire.instrument_pydantic_ai()
 def get_thread_id():
     return str(uuid.uuid4())
 
+
 thread_id = get_thread_id()
+
 
 async def main():
     st.title("Archon - Agent Builder")

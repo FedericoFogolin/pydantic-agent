@@ -1,28 +1,53 @@
 from pathlib import Path
 
 import logfire
-from .nodes import DefineScopeNode, GetUserMessageNode, GraphState, graph
 from pydantic_graph import End
 from pydantic_graph.persistence.file import FileStatePersistence
+
+from .nodes import (
+    ExpertNode,
+    GetUserMessageNode,
+    GraphState,
+    Triage,
+    graph,
+)
 
 logfire.configure(scrubbing=False)
 logfire.instrument_pydantic_ai()
 
 
 async def run_graph(run_id: str, user_input: str):
+    print(user_input)
     persistence = FileStatePersistence(Path(f"workbench/{run_id}.json"))
     persistence.set_graph_types(graph)
+
     if snapshot := await persistence.load_next():
         state = snapshot.state
         assert user_input != ""
-        node = GetUserMessageNode(user_message=user_input)
+        state.latest_user_message = user_input
+        if state.user_intent == "Development":
+            node = GetUserMessageNode(user_message=user_input)
+        elif state.user_intent == "Q&A":
+            node = ExpertNode()
+        else:
+            node = Triage()
     else:
-        state = GraphState(user_input, [])
-        node = DefineScopeNode()
+        state = GraphState(
+            latest_user_message=user_input,
+            latest_model_message="",
+            messages=[],
+            user_intent="",
+            scope="",
+            refined_prompt="",
+            refined_tool="",
+            refined_agent="",
+        )
+        node = Triage()
 
     async with graph.iter(node, state=state, persistence=persistence) as run:
         while True:
             node = await run.next()
+            print(node)
 
             if isinstance(node, End):
                 history = await persistence.load_all()
@@ -32,3 +57,7 @@ async def run_graph(run_id: str, user_input: str):
             elif isinstance(node, GetUserMessageNode):
                 print(node.code_output)
                 return node.code_output
+
+            elif isinstance(node, Triage):
+                print(state.user_intent)
+                return state.latest_model_message
