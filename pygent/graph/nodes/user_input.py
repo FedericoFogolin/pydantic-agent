@@ -1,12 +1,15 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from pydantic_graph import BaseNode, GraphRunContext
 
-from pygent.graph.state import GraphState
-from pygent.agents.routing import router_agent
-from pygent.graph.nodes.expert import ExpertNode
-from pygent.graph.nodes.refine import RefineRouter
-from pygent.graph.nodes.finish import FinishConversationNode
+from pygent.agents import router_agent
+
+from ..state import GraphState
+from .expert import ExpertNode
+from .finish import FinishNode
+from .refine import RefineRouterNode
 
 
 @dataclass
@@ -16,7 +19,7 @@ class GetUserMessageNode(BaseNode[GraphState, None]):
 
     async def run(
         self, ctx: GraphRunContext[GraphState]
-    ) -> FinishConversationNode | ExpertNode | RefineRouter:
+    ) -> FinishNode | ExpertNode | RefineRouterNode:
         prompt = f"""
         The user has sent a message: 
         
@@ -33,8 +36,8 @@ class GetUserMessageNode(BaseNode[GraphState, None]):
         next_node = result.output
 
         if next_node == "finish_conversation":
-            return FinishConversationNode()
+            return FinishNode()
         if next_node == "refine":
-            return RefineRouter()
+            return RefineRouterNode()
         else:
             return ExpertNode()

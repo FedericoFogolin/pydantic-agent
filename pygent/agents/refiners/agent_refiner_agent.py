@@ -17,7 +17,6 @@ from pygent.tools.documentation import (
 
 from .agent_refiner_prompt import agent_refiner_prompt
 
-
 logfire.configure()
 
 

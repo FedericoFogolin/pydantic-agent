@@ -1,9 +1,8 @@
 from pydantic_ai import Agent
 
 from pygent.core.config import REASONER_LLM_MODEL
-from pygent.prompts.reasoner import reasoner
 
-cope_definer_agent = Agent(
+scope_definer_agent = Agent(
     REASONER_LLM_MODEL,
-    system_prompt=reasoner,
+    system_prompt='You are an expert at coding AI agents with Pydantic AI and defining the scope for doing so.',
 )

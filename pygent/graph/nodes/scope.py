@@ -1,12 +1,15 @@
 from __future__ import annotations
+
 import os
 from dataclasses import dataclass
+
 from pydantic_graph import BaseNode, GraphRunContext
 
-from pygent.graph.state import GraphState
-from pygent.agents.reasoner import reasoner_agent
+from pygent.agents import scope_definer_agent
 from pygent.tools.documentation import list_documentation_pages_helper
-from pygent.graph.nodes.expert import ExpertNode
+
+from ..state import GraphState
+from .expert import ExpertNode
 
 
 @dataclass
@@ -30,7 +33,7 @@ class DefineScopeNode(BaseNode[GraphState, None]):
         Include a list of documentation pages that are relevant to creating this agent for the user in the scope document.
         """
 
-        result = await reasoner_agent.run(prompt)
+        result = await scope_definer_agent.run(prompt)
         scope = result.output
         ctx.state.scope = scope
 
@@ -40,6 +43,3 @@ class DefineScopeNode(BaseNode[GraphState, None]):
             f.write(scope)
 
         return ExpertNode()
-
-
-# Code related to the Scope node

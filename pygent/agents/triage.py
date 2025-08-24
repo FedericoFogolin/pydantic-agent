@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
 from pygent.core.config import PRIMARY_LLM_MODEL
-from pygent.prompts.triage import triage
 
 
 class TriageResult(BaseModel):
@@ -28,5 +27,9 @@ class TriageResult(BaseModel):
 triage_agent = Agent[None, TriageResult](
     PRIMARY_LLM_MODEL,
     output_type=TriageResult,
-    system_prompt=triage,
+    system_prompt="""Your goal is to identify the user request intent among the following options:
+    1. 'Q&A': when the user is requesting specific information or brainstorming ideas.
+    2. 'Development': when the user is requesting to develop or build or add features.
+    3. 'Chat': whene the request is conversational and no specific intent is identified.
+    """,
 )

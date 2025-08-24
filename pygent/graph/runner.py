@@ -4,10 +4,11 @@ import logfire
 from pydantic_graph import End
 from pydantic_graph.persistence.file import FileStatePersistence
 
-from pygent.graph.factory import graph
-from pygent.graph.nodes.triage import Triage
-from pygent.graph.nodes.user_input import GetUserMessageNode
-from pygent.graph.state import GraphState
+from pygent.graph.nodes import TriageNode, GetUserMessageNode
+
+from .factory import graph
+from .state import GraphState
+
 
 logfire.configure(scrubbing=False)
 logfire.instrument_pydantic_ai()
@@ -24,9 +25,9 @@ async def run_graph(run_id: str, user_input: str):
         if state.user_intent == "Development":
             node = GetUserMessageNode(user_message=user_input)
         elif state.user_intent == "Q&A":
-            node = Triage()
+            node = TriageNode()
         else:
-            node = Triage()
+            node = TriageNode()
     else:
         state = GraphState(
             latest_user_message=user_input,
@@ -39,7 +40,7 @@ async def run_graph(run_id: str, user_input: str):
             refined_tool="",
             refined_agent="",
         )
-        node = Triage()
+        node = TriageNode()
 
     async with graph.iter(node, state=state, persistence=persistence) as run:
         while True:
@@ -55,6 +56,6 @@ async def run_graph(run_id: str, user_input: str):
                 print(node.code_output)
                 return node.code_output
 
-            elif isinstance(node, Triage):
+            elif isinstance(node, TriageNode):
                 print(state.user_intent)
                 return state.latest_model_message

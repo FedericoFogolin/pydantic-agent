@@ -8,12 +8,13 @@ from supabase import Client
 
 from pygent.core.clients import openai_client, supabase_client
 from pygent.core.config import PRIMARY_LLM_MODEL
-from pygent.prompts.expert import docs_expert, primary_coder
 from pygent.tools.documentation import (
     get_page_content_helper,
     list_documentation_pages_helper,
     retrieve_relevant_documentation_helper,
 )
+
+from .expert_prompt import coder_expert_prompt, docs_expert_prompt
 
 logfire.configure()
 
@@ -31,8 +32,8 @@ expert_agent = Agent(PRIMARY_LLM_MODEL, deps_type=PydanticAIDeps, retries=2)
 
 @expert_agent.system_prompt
 def add_base_prompt(ctx: RunContext[PydanticAIDeps]) -> str:
-    coder_prompt = primary_coder
-    expert_prompt = docs_expert
+    coder_prompt = coder_expert_prompt
+    expert_prompt = docs_expert_prompt
     return coder_prompt if ctx.deps.user_intent == "Development" else expert_prompt
 
 

@@ -1,25 +1,28 @@
 from pydantic_graph import Graph
 
-from pygent.graph.state import GraphState
-from pygent.graph.nodes.triage import Triage
-from pygent.graph.nodes.scope import DefineScope
-from pygent.graph.nodes.expert import ExpertNode
-from pygent.graph.nodes.user_input import GetUserMessageNode
-from pygent.graph.nodes.finish import FinishConversationNode
-from pygent.graph.nodes.refine import RefineRouter, RefinePrompt, RefineAgent
+from .state import GraphState
+from .nodes import (
+    TriageNode,
+    DefineScopeNode,
+    ExpertNode,
+    GetUserMessageNode,
+    RefineRouterNode,
+    RefineAgentNode,
+    RefinePromptNode,
+    FinishNode
+)
 
 graph = Graph(
     nodes=[
-        Triage,
-        DefineScope,
+        TriageNode,
+        DefineScopeNode,
         ExpertNode,
         GetUserMessageNode,
-        FinishConversationNode,
-        RefineRouter,
-        RefinePrompt,
-        RefineAgent,
+        RefineRouterNode,
+        RefineAgentNode,
+        RefinePromptNode,
+        FinishNode
     ],
-    name="pyagent",
+    name="pygent",
     state_type=GraphState,
 )
-# Code related to the Graph factory

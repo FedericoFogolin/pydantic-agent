@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 from pydantic_graph import BaseNode, End, GraphRunContext
 
-from pygent.graph.state import GraphState
-from pygent.agents.conversation import end_conversation_agent
+from pygent.agents import end_conversation_agent
+
+from ..state import GraphState
 
 
 @dataclass

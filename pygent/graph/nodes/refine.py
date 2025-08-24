@@ -1,29 +1,35 @@
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 from pydantic_graph import BaseNode, GraphRunContext
 
-from pygent.graph.state import GraphState
-from pygent.agents.routing import refine_router_agent
-from pygent.agents.refiners.prompt import prompt_refiner_agent
-from pygent.agents.refiners.agent import agent_refiner_agent, AgentRefinerDeps
-from pygent.graph.nodes.expert import ExpertNode
+from pygent.agents import (
+    AgentRefinerDeps,
+    agent_refiner_agent,
+    prompt_refiner_agent,
+    refine_router_agent,
+)
+
+from ..state import GraphState
+from .expert import ExpertNode
 
 
 @dataclass
 class RefineRouterNode(BaseNode[GraphState, None]):
-    async def run(self, ctx: GraphRunContext[GraphState]) -> RefinePrompt | RefineAgent:
+    async def run(self, ctx: GraphRunContext[GraphState]) -> RefinePromptNode | RefineAgentNode:
         result = await refine_router_agent.run(ctx.state.latest_user_message)
         if result.output == "refine_prompt":
-            return RefinePrompt()
+            return RefinePromptNode()
         if result.output == "refine_agent":
-            return RefineAgent()
+            return RefineAgentNode()
         else:
             raise ValueError(f"Invalid refine request: {result.output}")
 
 
 @dataclass
-class RefinePrompt(BaseNode[GraphState, None]):
+class RefinePromptNode(BaseNode[GraphState, None]):
     async def run(self, ctx: GraphRunContext[GraphState]) -> ExpertNode:
         message_history: list[ModelMessage] = []
         for message_row in ctx.state.expert_conversation:
@@ -36,7 +42,7 @@ class RefinePrompt(BaseNode[GraphState, None]):
 
 
 @dataclass
-class RefineAgent(BaseNode[GraphState, None]):
+class RefineAgentNode(BaseNode[GraphState, None]):
     async def run(self, ctx: GraphRunContext[GraphState]) -> ExpertNode:
         deps = AgentRefinerDeps(
             refinement_request=ctx.state.latest_user_message,

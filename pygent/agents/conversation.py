@@ -1,4 +1,5 @@
 from pydantic_ai import Agent
+
 from pygent.core.config import PRIMARY_LLM_MODEL
 
 end_conversation_agent = Agent(

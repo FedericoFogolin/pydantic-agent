@@ -10,8 +10,7 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from supabase import Client
 
-from pygent.graph import run_graph
-
+from pygent.graph.runner import run_graph
 
 load_dotenv()
 

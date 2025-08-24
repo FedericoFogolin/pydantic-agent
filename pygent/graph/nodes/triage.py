@@ -6,17 +6,18 @@ import logfire
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 from pydantic_graph import BaseNode, GraphRunContext
 
-from pygent.agents.triage import triage_agent
-from pygent.graph.nodes.expert import ExpertNode
-from pygent.graph.nodes.scope import DefineScope
-from pygent.graph.state import GraphState
+from pygent.agents import triage_agent
+
+from ..state import GraphState
+from .expert import ExpertNode
+from .scope import DefineScopeNode
 
 
 @dataclass
 class TriageNode(BaseNode[GraphState, None]):
     async def run(
         self, ctx: GraphRunContext[GraphState]
-    ) -> DefineScope | ExpertNode | TriageNode:
+    ) -> DefineScopeNode | ExpertNode | TriageNode:
         message_history: list[ModelMessage] = []
         for message_row in ctx.state.triage_conversation:
             message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
@@ -32,7 +33,7 @@ class TriageNode(BaseNode[GraphState, None]):
             return ExpertNode()
         elif result.output.intent == "Development":
             ctx.state.user_intent = result.output.intent
-            return DefineScope()
+            return DefineScopeNode()
         else:
             ctx.state.user_intent = result.output.intent
             assert result.output.response_to_user is not None

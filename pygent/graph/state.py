@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Annotated
 
+
 @dataclass
 class GraphState:
     latest_user_message: str
@@ -14,4 +15,3 @@ class GraphState:
     refined_prompt: str
     refined_tool: str
     refined_agent: str
-# Code related to the Graph state
