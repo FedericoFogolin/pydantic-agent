@@ -26,9 +26,10 @@ primary_llm_model = os.getenv("PRIMARY_MODEL", "gpt-4o")
 class AgentRefinerDeps:
     supabase: Client
     embedding_client: AsyncOpenAI
+    refinement_request: str
 
 
-agent_refiner_agent = Agent(
+agent_refiner = Agent(
     primary_llm_model,
     system_prompt=prompt_refiner,
     deps_type=AgentRefinerDeps,
@@ -36,7 +37,12 @@ agent_refiner_agent = Agent(
 )
 
 
-@agent_refiner_agent.tool
+@agent_refiner.system_prompt
+def add_user_refinment_request(ctx: RunContext[AgentRefinerDeps]) -> str:
+    return f"""User refinement request: {ctx.deps.refinement_request}"""
+
+
+@agent_refiner.tool
 async def retrieve_relevant_documentation(
     ctx: RunContext[AgentRefinerDeps], query: str
 ) -> str:
@@ -55,7 +61,7 @@ async def retrieve_relevant_documentation(
     )
 
 
-@agent_refiner_agent.tool
+@agent_refiner.tool
 async def list_documentation_pages(ctx: RunContext[AgentRefinerDeps]) -> list[str]:
     """
     Retrieve a list of all available Pydantic AI documentation pages.
@@ -67,7 +73,7 @@ async def list_documentation_pages(ctx: RunContext[AgentRefinerDeps]) -> list[st
     return await list_documentation_pages_helper(ctx.deps.supabase)
 
 
-@agent_refiner_agent.tool
+@agent_refiner.tool
 async def get_page_content(ctx: RunContext[AgentRefinerDeps], url: str) -> str:
     """
     Retrieve the full content of a specific documentation page by combining all its chunks.

@@ -14,6 +14,7 @@ from supabase import Client
 from .agents import (
     end_conversation_agent,
     reasoner_agent,
+    refine_router_agent,
     router_agent,
     triage_agent,
 )
@@ -22,6 +23,7 @@ from .py_ai_expert import (
     list_documentation_pages_helper,
     pydantic_ai_expert,
 )
+from .refiner_agents import AgentRefinerDeps, agent_refiner, prompt_refiner
 
 load_dotenv()
 
@@ -116,6 +118,7 @@ class ExpertNode(BaseNode[GraphState, None]):
         deps = PydanticAIDeps(
             supabase=supabase,
             embedding_client=openai_client,
+            user_intent=ctx.state.user_intent,
             reasoner_output=ctx.state.scope,
         )
 
@@ -139,7 +142,7 @@ class GetUserMessageNode(BaseNode[GraphState, None]):
 
     async def run(
         self, ctx: GraphRunContext[GraphState]
-    ) -> FinishConversationNode | ExpertNode:
+    ) -> FinishConversationNode | ExpertNode | RefineRouter:
         prompt = f"""
         The user has sent a message: 
         
@@ -147,6 +150,7 @@ class GetUserMessageNode(BaseNode[GraphState, None]):
 
         If the user wants to end the conversation, respond with just the text "finish_conversation".
         If the user wants to continue coding the AI agent, respond with just the text "coder_agent".
+        If the user asks specifically to "refine" the agent, respond with just the text "refine".
         """
         if self.user_message is not None:
             ctx.state.latest_user_message = self.user_message
@@ -156,8 +160,55 @@ class GetUserMessageNode(BaseNode[GraphState, None]):
 
         if next_node == "finish_conversation":
             return FinishConversationNode()
+        if next_node == "refine":
+            return RefineRouter()
         else:
             return ExpertNode()
+
+
+@dataclass
+class RefineRouter(BaseNode[GraphState, None]):
+    async def run(self, ctx: GraphRunContext[GraphState]) -> RefinePrompt | RefineAgent:
+        result = await refine_router_agent.run(ctx.state.latest_user_message)
+        if result.output == "refine_prompt":
+            return RefinePrompt()
+        if result.output == "refine_agent":
+            return RefineAgent()
+        else:
+            raise ValueError(f"Invalid refine request: {result.output}")
+
+
+@dataclass
+class RefinePrompt(BaseNode[GraphState, None]):
+    async def run(self, ctx: GraphRunContext[GraphState]) -> ExpertNode:
+        message_history: list[ModelMessage] = []
+        for message_row in ctx.state.expert_conversation:
+            message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
+
+        prompt = "Based on the current conversation, refine the prompt for the agent."
+        result = await prompt_refiner.run(prompt, message_history=message_history)
+        ctx.state.refined_prompt = result.output
+        return ExpertNode()
+
+
+@dataclass
+class RefineAgent(BaseNode[GraphState, None]):
+    async def run(self, ctx: GraphRunContext[GraphState]) -> ExpertNode:
+        deps = AgentRefinerDeps(
+            supabase=supabase,
+            embedding_client=openai_client,
+            refinement_request=ctx.state.latest_user_message,
+        )
+        message_history: list[ModelMessage] = []
+        for message_row in ctx.state.expert_conversation:
+            message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
+
+        prompt = "Based on the current conversation, refine the agent definition."
+        result = await agent_refiner.run(
+            prompt, message_history=message_history, deps=deps
+        )
+        ctx.state.refined_agent = result.output
+        return ExpertNode()
 
 
 @dataclass
@@ -182,6 +233,9 @@ graph = Graph(
         ExpertNode,
         GetUserMessageNode,
         FinishConversationNode,
+        RefineRouter,
+        RefinePrompt,
+        RefineAgent,
     ],
     name="pyagent",
     state_type=GraphState,

@@ -11,7 +11,7 @@ load_dotenv()
 
 reasoner_llm_model = os.getenv("REASONER_MODEL", "o3-mini")
 primary_llm_model = os.getenv("PRIMARY_MODEL", "gpt-4o")
-
+small_llm_model = os.getenv("SMALL_MODEL", "gpt-4.1-mini")
 
 reasoner_agent = Agent(
     reasoner_llm_model,
@@ -60,3 +60,12 @@ triage_agent = Agent[None, TriageResult](
 )
 
 expert_agent = Agent(primary_llm_model, system_prompt=docs_expert)
+
+refine_router_agent = Agent(
+    small_llm_model,
+    instructions="""Your job is to decide which of the following categories the user's request falls into:
+        1. `refine_prompt`: for request about refining the prompt for the agent.
+        2. `refine_agent`: for request about refining the agent definition.
+
+    Respond only with the category name.""",
+)

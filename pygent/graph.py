@@ -5,7 +5,6 @@ from pydantic_graph import End
 from pydantic_graph.persistence.file import FileStatePersistence
 
 from .nodes import (
-    ExpertNode,
     GetUserMessageNode,
     GraphState,
     Triage,
@@ -17,7 +16,6 @@ logfire.instrument_pydantic_ai()
 
 
 async def run_graph(run_id: str, user_input: str):
-    print(user_input)
     persistence = FileStatePersistence(Path(f"workbench/{run_id}.json"))
     persistence.set_graph_types(graph)
 
@@ -28,7 +26,7 @@ async def run_graph(run_id: str, user_input: str):
         if state.user_intent == "Development":
             node = GetUserMessageNode(user_message=user_input)
         elif state.user_intent == "Q&A":
-            node = ExpertNode()
+            node = Triage()
         else:
             node = Triage()
     else:

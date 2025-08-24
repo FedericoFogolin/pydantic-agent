@@ -13,4 +13,4 @@ logfire.configure()
 
 primary_llm_model = os.getenv("PRIMARY_MODEL", "gpt-4o")
 
-prompt_refiner_agent = Agent(primary_llm_model, system_prompt=prompt_refiner)
+prompt_refiner = Agent(primary_llm_model, system_prompt=prompt_refiner)

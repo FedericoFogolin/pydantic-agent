@@ -7,7 +7,7 @@ from openai import AsyncOpenAI
 from pydantic_ai import Agent, RunContext
 from supabase import Client
 
-from .prompts.primary_coder_prompt import primary_coder
+from .prompts import primary_coder, docs_expert
 from .utils import (
     get_page_content_helper,
     list_documentation_pages_helper,
@@ -23,21 +23,31 @@ logfire.configure()
 class PydanticAIDeps:
     supabase: Client
     embedding_client: AsyncOpenAI
+    user_intent: str
     reasoner_output: Optional[str] = None
 
 
-pydantic_ai_expert = Agent(
-    llm, system_prompt=primary_coder, deps_type=PydanticAIDeps, retries=2
-)
+pydantic_ai_expert = Agent(llm, deps_type=PydanticAIDeps, retries=2)
+
+
+@pydantic_ai_expert.system_prompt
+def add_base_prompt(ctx: RunContext[PydanticAIDeps]) -> str:
+    coder_prompt = primary_coder
+    expert_prompt = docs_expert
+    return coder_prompt if ctx.deps.user_intent == "Development" else expert_prompt
 
 
 @pydantic_ai_expert.system_prompt
 def add_reasoner_output(ctx: RunContext[PydanticAIDeps]) -> str:
-    return f"""
+    return (
+        f"""
     \n\nAdditional thoughts/instructions from the reasoner LLM.
     This scope includes documentation pages for you to search as well:
     {ctx.deps.reasoner_output}
     """
+        if ctx.deps.user_intent == "Development"
+        else ""
+    )
 
 
 @pydantic_ai_expert.tool
