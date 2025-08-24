@@ -5,17 +5,18 @@ from dataclasses import dataclass
 from typing import Annotated, Optional
 
 import logfire
-from .agents import end_conversation_agent, reasoner_agent, router_agent
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from .py_ai_expert import (
-    PydanticAIDeps,
-    list_documentation_pages_helper,
-    pydantic_ai_expert,
-)
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
 from pydantic_graph import BaseNode, End, Graph, GraphRunContext
 from supabase import Client
+
+from .agents import end_conversation_agent, reasoner_agent, router_agent
+from .py_ai_expert import (
+    PydanticAIDeps,
+    list_documentation_pages_helper,
+    pydantic_ai_coder,
+)
 
 load_dotenv()
 
@@ -73,7 +74,7 @@ class CoderNode(BaseNode[GraphState, None]):
     async def run(self, ctx: GraphRunContext[GraphState]) -> GetUserMessageNode:
         deps = PydanticAIDeps(
             supabase=supabase,
-            openai_client=openai_client,
+            embedding_client=openai_client,
             reasoner_output=ctx.state.scope,
         )
 
@@ -81,7 +82,7 @@ class CoderNode(BaseNode[GraphState, None]):
         for message_row in ctx.state.messages:
             message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
 
-        result = await pydantic_ai_expert.run(
+        result = await pydantic_ai_coder.run(
             ctx.state.latest_user_message,
             deps=deps,
             message_history=message_history,
@@ -134,7 +135,12 @@ class FinishConversationNode(BaseNode[GraphState, None, str]):
 
 
 graph = Graph(
-    nodes=[DefineScopeNode, CoderNode, GetUserMessageNode, FinishConversationNode],
+    nodes=[
+        DefineScopeNode,
+        CoderNode,
+        GetUserMessageNode,
+        FinishConversationNode,
+    ],
     name="pyagent",
     state_type=GraphState,
 )

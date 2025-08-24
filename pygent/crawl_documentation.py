@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict
 from urllib.parse import urlparse
 from xml.etree import ElementTree
+import html2text
 
 import requests
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
@@ -29,7 +30,14 @@ if not url or not key:
         "SUPABASE_URL and SUPABASE_KEY must be set in the environment variables."
     )
 supabase: Client = create_client(url, key)
-openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+embedding_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
+
+# Initialize HTML to Markdown converter
+html_converter = html2text.HTML2Text()
+html_converter.ignore_links = False
+html_converter.ignore_images = False
+html_converter.ignore_tables = False
+html_converter.body_width = 0  # No wrapping
 
 
 @dataclass
@@ -64,7 +72,6 @@ def chunk_text(text: str, chunk_size: int = 5000) -> list[str]:
             # Find the last paragraph break
             last_break = chunk.rfind("\n\n")
             if (
-
                 last_break > chunk_size * 0.3
             ):  # Only break if we're past 30% of chunk_size
                 end = start + last_break
@@ -117,7 +124,7 @@ async def get_title_and_summary(chunk: str, url: str) -> Dict[str, str]:
 
 async def get_embedding(text: str) -> list[float]:
     try:
-        response = await openai_client.embeddings.create(
+        response = await embedding_client.embeddings.create(
             model="text-embedding-3-small",
             input=text,
         )
@@ -231,6 +238,21 @@ def get_pydantic_ai_docs_urls() -> list[str]:
     except Exception as e:
         logging.error(f"Error fetching sitemap: {e}")
         return []
+
+
+def clear_existing_records():
+    try:
+        result = (
+            supabase.table("site_pages")
+            .delete()
+            .eq("metadata->>source", "pydantic_ai_docs")
+            .execute()
+        )
+        print("Cleared existing pydantic_ai_docs records from site_pages")
+        return result
+    except Exception as e:
+        print(f"Error clearing existing records: {e}")
+        return None
 
 
 async def main():

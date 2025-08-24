@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "crawl4ai>=0.7.4",
+    "html2text>=2025.4.15",
     "logfire>=4.3.4",
     "pydantic>=2.11.7",
     "pydantic-ai>=0.7.4",
