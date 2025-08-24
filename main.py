@@ -1,5 +1,6 @@
-from utils.utils import mermaid_code
-from pygent.nodes import graph, Triage
+from pygent.tools import mermaid_code
+from pygent.graph import graph
+from pygent.graph.nodes import Triage
 
 
 def main():
