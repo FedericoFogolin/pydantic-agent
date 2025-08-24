@@ -37,6 +37,7 @@ class TriageResult(BaseModel):
     intent: Literal["Development", "Q&A", "Chat"] = Field(
         description="The classified intent. Chat if unclear.",
     )
+    user_request: str = Field(..., description="The request of the user.")
     reasoning: str = Field(
         ..., description="A brief explanation for the classification choice."
     )

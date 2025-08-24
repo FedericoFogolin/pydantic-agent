@@ -38,7 +38,8 @@ supabase: Client = Client(
 class GraphState:
     latest_user_message: str
     latest_model_message: str
-    messages: Annotated[list[bytes], lambda x, y: x + y]
+    expert_conversation: Annotated[list[bytes], lambda x, y: x + y]
+    triage_conversation: Annotated[list[bytes], lambda x, y: x + y]
 
     user_intent: str
     scope: str
@@ -54,14 +55,14 @@ class Triage(BaseNode[GraphState, None]):
         self, ctx: GraphRunContext[GraphState]
     ) -> DefineScope | ExpertNode | Triage:
         message_history: list[ModelMessage] = []
-        for message_row in ctx.state.messages:
+        for message_row in ctx.state.triage_conversation:
             message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
 
         result = await triage_agent.run(
             ctx.state.latest_user_message, message_history=message_history
         )
         logfire.info(f"Triage result: {result.output.intent}")
-        ctx.state.messages = [result.new_messages_json()]
+        ctx.state.triage_conversation = [result.new_messages_json()]
 
         if result.output.intent == "Q&A":
             ctx.state.user_intent = result.output.intent
@@ -119,7 +120,7 @@ class ExpertNode(BaseNode[GraphState, None]):
         )
 
         message_history: list[ModelMessage] = []
-        for message_row in ctx.state.messages:
+        for message_row in ctx.state.expert_conversation:
             message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
 
         result = await pydantic_ai_expert.run(
@@ -127,7 +128,7 @@ class ExpertNode(BaseNode[GraphState, None]):
             deps=deps,
             message_history=message_history,
         )
-        ctx.state.messages = [result.new_messages_json()]
+        ctx.state.expert_conversation = [result.new_messages_json()]
         return GetUserMessageNode(result.output)
 
 
@@ -163,14 +164,14 @@ class GetUserMessageNode(BaseNode[GraphState, None]):
 class FinishConversationNode(BaseNode[GraphState, None, str]):
     async def run(self, ctx: GraphRunContext[GraphState]) -> End[str]:
         message_history: list[ModelMessage] = []
-        for message_row in ctx.state.messages:
+        for message_row in ctx.state.expert_conversation:
             message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
 
         result = await end_conversation_agent.run(
             ctx.state.latest_user_message,
             message_history=message_history,
         )
-        ctx.state.messages = [result.new_messages_json()]
+        ctx.state.expert_conversation = [result.new_messages_json()]
         return End(result.output)
 
 

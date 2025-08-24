@@ -35,7 +35,8 @@ async def run_graph(run_id: str, user_input: str):
         state = GraphState(
             latest_user_message=user_input,
             latest_model_message="",
-            messages=[],
+            triage_conversation=[],
+            expert_conversation=[],
             user_intent="",
             scope="",
             refined_prompt="",
