@@ -1,5 +1,7 @@
+from __future__ import annotations
+
+import os
 from dataclasses import dataclass
-from typing import Optional
 
 import logfire
 from dotenv import load_dotenv
@@ -7,61 +9,57 @@ from openai import AsyncOpenAI
 from pydantic_ai import Agent, RunContext
 from supabase import Client
 
-from .prompts.primary_coder_prompt import primary_coder
-from .utils import (
+from ..prompts import prompt_refiner
+from ..utils import (
     get_page_content_helper,
     list_documentation_pages_helper,
     retrieve_relevant_documentation_helper,
 )
 
 load_dotenv()
-llm = "openai:gpt-4o"
 logfire.configure()
+
+primary_llm_model = os.getenv("PRIMARY_MODEL", "gpt-4o")
 
 
 @dataclass
-class PydanticAIDeps:
+class AgentRefinerDeps:
     supabase: Client
     embedding_client: AsyncOpenAI
-    reasoner_output: Optional[str] = None
 
 
-pydantic_ai_expert = Agent(
-    llm, system_prompt=primary_coder, deps_type=PydanticAIDeps, retries=2
+agent_refiner_agent = Agent(
+    primary_llm_model,
+    system_prompt=prompt_refiner,
+    deps_type=AgentRefinerDeps,
+    retries=2,
 )
 
 
-@pydantic_ai_expert.system_prompt
-def add_reasoner_output(ctx: RunContext[PydanticAIDeps]) -> str:
-    return f"""
-    \n\nAdditional thoughts/instructions from the reasoner LLM.
-    This scope includes documentation pages for you to search as well:
-    {ctx.deps.reasoner_output}
-    """
-
-
-@pydantic_ai_expert.tool
+@agent_refiner_agent.tool
 async def retrieve_relevant_documentation(
-    ctx: RunContext[PydanticAIDeps], user_query: str
+    ctx: RunContext[AgentRefinerDeps], query: str
 ) -> str:
     """
     Retrieve relevant documentation chunks based on the query with RAG.
+    Make sure your searches always focus on implementing the agent itself.
 
     Args:
-        user_query: The user's question or query
+        query: Your query to retrieve relevant documentation for implementing agents
 
     Returns:
         A formatted string containing the top 4 most relevant documentation chunks
     """
     return await retrieve_relevant_documentation_helper(
-        ctx.deps.supabase, ctx.deps.embedding_client, user_query
+        ctx.deps.supabase, ctx.deps.embedding_client, query
     )
 
 
-@pydantic_ai_expert.tool
-async def list_documentation_pages(ctx: RunContext[PydanticAIDeps]) -> list[str]:
+@agent_refiner_agent.tool
+async def list_documentation_pages(ctx: RunContext[AgentRefinerDeps]) -> list[str]:
     """
     Retrieve a list of all available Pydantic AI documentation pages.
+    This will give you all pages available, but focus on the ones related to configuring agents and their dependencies.
 
     Returns:
         List[str]: List of unique URLs for all documentation pages
@@ -69,10 +67,11 @@ async def list_documentation_pages(ctx: RunContext[PydanticAIDeps]) -> list[str]
     return await list_documentation_pages_helper(ctx.deps.supabase)
 
 
-@pydantic_ai_expert.tool
-async def get_page_content(ctx: RunContext[PydanticAIDeps], url: str) -> str:
+@agent_refiner_agent.tool
+async def get_page_content(ctx: RunContext[AgentRefinerDeps], url: str) -> str:
     """
     Retrieve the full content of a specific documentation page by combining all its chunks.
+    Only use this tool to get pages related to setting up agents with Pydantic AI.
 
     Args:
         url: The URL of the page to retrieve

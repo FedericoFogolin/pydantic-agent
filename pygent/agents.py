@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
+from .prompts import docs_expert
+
 load_dotenv()
 
 reasoner_llm_model = os.getenv("REASONER_MODEL", "o3-mini")
@@ -55,3 +57,5 @@ triage_agent = Agent[None, TriageResult](
         If the intent is unclear and the request conversational ('hello', 'how are you?'), generate response_to_user conversationally reminding the user your purpose:
         help with Pydantic AI development.""",
 )
+
+expert_agent = Agent(primary_llm_model, system_prompt=docs_expert)
