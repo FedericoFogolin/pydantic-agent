@@ -3,9 +3,28 @@ from datetime import datetime
 from functools import wraps
 
 
+def mermaid_code(target_graph, start_node):
+    """Generate and save mermaid code for a given start node.
+
+    Args:
+        start_node: The starting node for the graph.
+    """
+    mm = target_graph.mermaid_code(start_node=start_node)
+    print(mm)
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    workbench_dir = os.path.join(parent_dir, "workbench")
+    os.makedirs(workbench_dir, exist_ok=True)
+
+    # Save the mermaid image in the workbench directory
+    image_path = os.path.join(workbench_dir, "img.jpeg")
+    target_graph.mermaid_save(image_path, start_node=start_node)
+
+
 def write_to_log(message: str):
     """Write a message to the logs.txt file in the workbench directory.
-    
+
     Args:
         message: The message to log
     """
@@ -22,12 +41,14 @@ def write_to_log(message: str):
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(log_entry)
 
+
 def log_node_execution(func):
     """Decorator to log the start and end of graph node execution.
-    
+
     Args:
         func: The async function to wrap
     """
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
         func_name = func.__name__
@@ -39,4 +60,5 @@ def log_node_execution(func):
         except Exception as e:
             write_to_log(f"Error in node {func_name}: {str(e)}")
             raise
+
     return wrapper
