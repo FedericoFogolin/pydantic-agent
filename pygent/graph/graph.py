@@ -4,6 +4,7 @@ from .state import GraphState
 from .nodes import (
     TriageNode,
     DefineScopeNode,
+    RefineScopeNode,
     ExpertNode,
     GetUserMessageNode,
     RefineRouterNode,
@@ -16,6 +17,7 @@ graph = Graph(
     nodes=[
         TriageNode,
         DefineScopeNode,
+        RefineScopeNode,
         ExpertNode,
         GetUserMessageNode,
         RefineRouterNode,

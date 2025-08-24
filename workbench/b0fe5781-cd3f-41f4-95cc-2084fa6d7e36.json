@@ -1,0 +1,72 @@
+[
+  {
+    "state": {
+      "latest_user_message": "hello",
+      "latest_model_message": "",
+      "expert_conversation": [],
+      "triage_conversation": [],
+      "scope_conversation": [],
+      "user_intent": "",
+      "scope": "",
+      "refined_prompt": "",
+      "refined_tool": "",
+      "refined_agent": ""
+    },
+    "node": {
+      "node_id": "TriageNode"
+    },
+    "start_ts": "2025-08-24T18:55:52.729041Z",
+    "duration": 1.1858127349987626,
+    "status": "success",
+    "kind": "node",
+    "id": "TriageNode:da9020ac71ac4996b6d7da9d3ada5620"
+  },
+  {
+    "state": {
+      "latest_user_message": "hello",
+      "latest_model_message": "Hello! I am here to help you with PydanticAI development. How can I assist you today?",
+      "expert_conversation": [],
+      "triage_conversation": [
+        "[{\"parts\":[{\"content\":\"Your goal is to identify the user request intent among the following options:\\n    1. 'Q&A': when the user is requesting specific information or brainstorming ideas.\\n    2. 'Development': when the user is requesting to develop or build or add features.\\n    3. 'Chat': whene the request is conversational and no specific intent is identified.\\n    \",\"timestamp\":\"2025-08-24T18:55:52.730602Z\",\"dynamic_ref\":null,\"part_kind\":\"system-prompt\"},{\"content\":\"hello\",\"timestamp\":\"2025-08-24T18:55:52.730606Z\",\"part_kind\":\"user-prompt\"}],\"instructions\":null,\"kind\":\"request\"},{\"parts\":[{\"tool_name\":\"final_result\",\"args\":{\"user_request\":\"hello\",\"response_to_user\":\"Hello! I am here to help you with PydanticAI development. How can I assist you today?\",\"reasoning\":\"The user is initiating a conversation without asking a specific question or requesting development.\",\"intent\":\"Chat\"},\"tool_call_id\":\"pyd_ai_bbd9a2b1e0d34b39828b4144e5f25627\",\"part_kind\":\"tool-call\"}],\"usage\":{\"input_tokens\":236,\"cache_write_tokens\":0,\"cache_read_tokens\":0,\"output_tokens\":69,\"input_audio_tokens\":0,\"cache_audio_read_tokens\":0,\"output_audio_tokens\":0,\"details\":{\"thoughts_tokens\":88,\"text_prompt_tokens\":236}},\"model_name\":\"gemini-2.5-flash\",\"timestamp\":\"2025-08-24T18:55:53.897950Z\",\"kind\":\"response\",\"provider_details\":{\"finish_reason\":\"STOP\"},\"provider_request_id\":\"OWCraOL0NPCxxN8Ptf6rEA\"},{\"parts\":[{\"tool_name\":\"final_result\",\"content\":\"Final result processed.\",\"tool_call_id\":\"pyd_ai_bbd9a2b1e0d34b39828b4144e5f25627\",\"metadata\":null,\"timestamp\":\"2025-08-24T18:55:53.898471Z\",\"part_kind\":\"tool-return\"}],\"instructions\":null,\"kind\":\"request\"}]"
+      ],
+      "scope_conversation": [],
+      "user_intent": "Chat",
+      "scope": "",
+      "refined_prompt": "",
+      "refined_tool": "",
+      "refined_agent": ""
+    },
+    "node": {
+      "node_id": "TriageNode"
+    },
+    "start_ts": null,
+    "duration": null,
+    "status": "pending",
+    "kind": "node",
+    "id": "TriageNode:a0bdcb4e364a4534bc4c8bf32df1ebcd"
+  },
+  {
+    "state": {
+      "latest_user_message": "which model are available/",
+      "latest_model_message": "Hello! I am here to help you with PydanticAI development. How can I assist you today?",
+      "expert_conversation": [],
+      "triage_conversation": [
+        "[{\"parts\":[{\"content\":\"Your goal is to identify the user request intent among the following options:\\n    1. 'Q&A': when the user is requesting specific information or brainstorming ideas.\\n    2. 'Development': when the user is requesting to develop or build or add features.\\n    3. 'Chat': whene the request is conversational and no specific intent is identified.\\n    \",\"timestamp\":\"2025-08-24T18:55:52.730602Z\",\"dynamic_ref\":null,\"part_kind\":\"system-prompt\"},{\"content\":\"hello\",\"timestamp\":\"2025-08-24T18:55:52.730606Z\",\"part_kind\":\"user-prompt\"}],\"instructions\":null,\"kind\":\"request\"},{\"parts\":[{\"tool_name\":\"final_result\",\"args\":{\"user_request\":\"hello\",\"response_to_user\":\"Hello! I am here to help you with PydanticAI development. How can I assist you today?\",\"reasoning\":\"The user is initiating a conversation without asking a specific question or requesting development.\",\"intent\":\"Chat\"},\"tool_call_id\":\"pyd_ai_bbd9a2b1e0d34b39828b4144e5f25627\",\"part_kind\":\"tool-call\"}],\"usage\":{\"input_tokens\":236,\"cache_write_tokens\":0,\"cache_read_tokens\":0,\"output_tokens\":69,\"input_audio_tokens\":0,\"cache_audio_read_tokens\":0,\"output_audio_tokens\":0,\"details\":{\"thoughts_tokens\":88,\"text_prompt_tokens\":236}},\"model_name\":\"gemini-2.5-flash\",\"timestamp\":\"2025-08-24T18:55:53.897950Z\",\"kind\":\"response\",\"provider_details\":{\"finish_reason\":\"STOP\"},\"provider_request_id\":\"OWCraOL0NPCxxN8Ptf6rEA\"},{\"parts\":[{\"tool_name\":\"final_result\",\"content\":\"Final result processed.\",\"tool_call_id\":\"pyd_ai_bbd9a2b1e0d34b39828b4144e5f25627\",\"metadata\":null,\"timestamp\":\"2025-08-24T18:55:53.898471Z\",\"part_kind\":\"tool-return\"}],\"instructions\":null,\"kind\":\"request\"}]"
+      ],
+      "scope_conversation": [],
+      "user_intent": "Chat",
+      "scope": "",
+      "refined_prompt": "",
+      "refined_tool": "",
+      "refined_agent": ""
+    },
+    "node": {
+      "node_id": "TriageNode"
+    },
+    "start_ts": "2025-08-24T18:57:18.441369Z",
+    "duration": 0.015489331999560818,
+    "status": "error",
+    "kind": "node",
+    "id": "TriageNode:9aacaa4de75b4b3ab9cb8f7bd2f9c28c"
+  }
+]

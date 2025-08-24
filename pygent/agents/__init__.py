@@ -4,7 +4,11 @@ from .refiners.prompt_refiner_agent import prompt_refiner_agent
 from .conversation import end_conversation_agent
 from .routing import refine_router_agent, router_agent
 from .triage import triage_agent
-from .scoper_definer import scope_definer_agent
+from .scoper_definer import (
+    scope_definer_agent,
+    refine_scope_agent,
+    summarize_scope_agent,
+)
 
 __all__ = [
     "expert_agent",
@@ -16,5 +20,7 @@ __all__ = [
     "refine_router_agent",
     "triage_agent",
     "AgentRefinerDeps",
-    "scope_definer_agent"
+    "scope_definer_agent",
+    "refine_scope_agent",
+    "summarize_scope_agent",
 ]

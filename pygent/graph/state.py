@@ -8,6 +8,7 @@ class GraphState:
     latest_model_message: str
     expert_conversation: Annotated[list[bytes], lambda x, y: x + y]
     triage_conversation: Annotated[list[bytes], lambda x, y: x + y]
+    scope_conversation: Annotated[list[bytes], lambda x, y: x + y]
 
     user_intent: str
     scope: str

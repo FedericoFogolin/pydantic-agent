@@ -1,0 +1,46 @@
+[
+  {
+    "state": {
+      "latest_user_message": "ciao",
+      "latest_model_message": "",
+      "expert_conversation": [],
+      "triage_conversation": [],
+      "scope_conversation": [],
+      "user_intent": "",
+      "scope": "",
+      "refined_prompt": "",
+      "refined_tool": "",
+      "refined_agent": ""
+    },
+    "node": {
+      "node_id": "TriageNode"
+    },
+    "start_ts": "2025-08-24T18:53:43.410998Z",
+    "duration": 1.2599623759961105,
+    "status": "error",
+    "kind": "node",
+    "id": "TriageNode:122981a78a3344998f261840688e093b"
+  },
+  {
+    "state": {
+      "latest_user_message": "which models are available?",
+      "latest_model_message": "",
+      "expert_conversation": [],
+      "triage_conversation": [],
+      "scope_conversation": [],
+      "user_intent": "",
+      "scope": "",
+      "refined_prompt": "",
+      "refined_tool": "",
+      "refined_agent": ""
+    },
+    "node": {
+      "node_id": "TriageNode"
+    },
+    "start_ts": "2025-08-24T18:54:33.251047Z",
+    "duration": 0.02309697800228605,
+    "status": "error",
+    "kind": "node",
+    "id": "TriageNode:0c0643ac7fc5449ba4846123bbd423fd"
+  }
+]

@@ -5,19 +5,21 @@ from dataclasses import dataclass
 
 import logfire
 from pydantic_ai.messages import ModelMessage, ModelMessagesTypeAdapter
-from pydantic_graph import BaseNode, GraphRunContext, End
+from pydantic_graph import BaseNode, End, GraphRunContext
 
 from pygent.agents import (
-    scope_definer_agent,
-    triage_agent,
-    expert_agent,
-    PydanticAIDeps,
-    router_agent,
-    refine_router_agent,
-    prompt_refiner_agent,
-    agent_refiner_agent,
     AgentRefinerDeps,
+    PydanticAIDeps,
+    agent_refiner_agent,
     end_conversation_agent,
+    expert_agent,
+    prompt_refiner_agent,
+    refine_router_agent,
+    refine_scope_agent,
+    router_agent,
+    scope_definer_agent,
+    summarize_scope_agent,
+    triage_agent,
 )
 from pygent.tools.documentation import list_documentation_pages_helper
 
@@ -54,7 +56,7 @@ class TriageNode(BaseNode[GraphState, None]):
 
 @dataclass
 class DefineScopeNode(BaseNode[GraphState, None]):
-    async def run(self, ctx: GraphRunContext[GraphState]) -> ExpertNode:
+    async def run(self, ctx: GraphRunContext[GraphState]) -> RefineScopeNode:
         documentation_pages = await list_documentation_pages_helper()
         documentation_pages_str = "\n".join(documentation_pages)
         prompt = f"""
@@ -72,17 +74,44 @@ class DefineScopeNode(BaseNode[GraphState, None]):
 
         Include a list of documentation pages that are relevant to creating this agent for the user in the scope document.
         """
+        message_history: list[ModelMessage] = []
+        for message_row in ctx.state.scope_conversation:
+            message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
 
         result = await scope_definer_agent.run(prompt)
         scope = result.output
         ctx.state.scope = scope
+        ctx.state.scope_conversation = [result.new_messages_json()]
 
         scope_path = os.path.join("workbench", "scope.md")
         os.makedirs("workbench", exist_ok=True)
         with open(scope_path, "w", encoding="utf-8") as f:
             f.write(scope)
 
-        return ExpertNode()
+        result = await summarize_scope_agent.run(scope)
+
+        return RefineScopeNode(scope_summary=result.output.scope_summary)
+
+
+@dataclass
+class RefineScopeNode(BaseNode[GraphState, None]):
+    scope_summary: str | None = None
+
+    async def run(
+        self, ctx: GraphRunContext[GraphState]
+    ) -> DefineScopeNode | ExpertNode:
+        message_history: list[ModelMessage] = []
+        for message_row in ctx.state.scope_conversation:
+            message_history.extend(ModelMessagesTypeAdapter.validate_json(message_row))
+
+        result = await refine_scope_agent.run(ctx.state.latest_user_message)
+        approved = result.output.approved
+        ctx.state.scope_conversation = [result.new_messages_json()]
+
+        if approved:
+            return ExpertNode()
+        else:
+            return DefineScopeNode()
 
 
 @dataclass
