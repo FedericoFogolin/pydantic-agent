@@ -9,7 +9,7 @@ from .nodes import (
     RefineRouterNode,
     RefineAgentNode,
     RefinePromptNode,
-    FinishNode
+    FinishNode,
 )
 
 graph = Graph(
@@ -21,7 +21,7 @@ graph = Graph(
         RefineRouterNode,
         RefineAgentNode,
         RefinePromptNode,
-        FinishNode
+        FinishNode,
     ],
     name="pygent",
     state_type=GraphState,

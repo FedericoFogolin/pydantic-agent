@@ -1,10 +1,9 @@
 from utils.utils import mermaid_code
-from pygent.graph import graph
-from pygent.graph.nodes import TriageNode
+from pygent.graph import graph, nodes
 
 
 def main():
-    mermaid_code(graph, start_node=TriageNode)
+    mermaid_code(graph, start_node=nodes.TriageNode)
 
 
 if __name__ == "__main__":

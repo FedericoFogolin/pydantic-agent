@@ -1,0 +1,23 @@
+[
+  {
+    "state": {
+      "latest_user_message": "hwllo",
+      "latest_model_message": "",
+      "expert_conversation": [],
+      "triage_conversation": [],
+      "user_intent": "",
+      "scope": "",
+      "refined_prompt": "",
+      "refined_tool": "",
+      "refined_agent": ""
+    },
+    "node": {
+      "node_id": "TriageNode"
+    },
+    "start_ts": "2025-08-24T17:23:47.428611Z",
+    "duration": 0.4487913480043062,
+    "status": "error",
+    "kind": "node",
+    "id": "TriageNode:875b2fb8d27b404f81d6daae1dad5614"
+  }
+]

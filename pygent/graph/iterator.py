@@ -6,7 +6,7 @@ from pydantic_graph.persistence.file import FileStatePersistence
 
 from pygent.graph.nodes import TriageNode, GetUserMessageNode
 
-from .factory import graph
+from .graph import graph
 from .state import GraphState
 
 
